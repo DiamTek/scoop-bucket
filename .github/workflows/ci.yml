@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Manifest JSON & Schema
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          
+          if (-not (Test-Path "bucket")) {
+              Write-Host "::error::The 'bucket' directory does not exist."
+              exit 1
+          }
+
+          $files = Get-ChildItem -Path "bucket" -Filter "*.json"
+          if ($null -eq $files -or $files.Count -eq 0) {
+              Write-Host "::error::No manifests found in bucket/"
+              exit 1
+          }
+
+          $failed = $false
+          $requiredProperties = @("version", "description", "homepage", "license", "url", "hash")
+
+          foreach ($f in $files) {
+              try {
+                  $content = Get-Content $f.FullName -Raw
+                  if ([string]::IsNullOrWhiteSpace($content)) {
+                      throw "File is empty"
+                  }
+                  
+                  $parsed = ConvertFrom-Json -InputObject $content
+                  
+                  # Guard against top-level array, primitive, or null
+                  if ($parsed -is [System.Array]) {
+                      throw "Manifest root must be a JSON object, not an array."
+                  }
+                  if ($null -eq $parsed -or $parsed -isnot [System.Management.Automation.PSCustomObject]) {
+                      throw "Manifest root must be a valid JSON object."
+                  }
+
+                  $missing = foreach ($prop in $requiredProperties) {
+                      if (-not ($parsed.PSObject.Properties.Name -contains $prop) -or [string]::IsNullOrWhiteSpace($parsed.$prop)) {
+                          $prop
+                      }
+                  }
+                  
+                  if ($missing) {
+                      throw "Missing mandatory fields: $($missing -join ', ')"
+                  }
+
+                  Write-Host "[OK] $($f.Name) (v$($parsed.version)) - Schema valid"
+              } catch {
+                  Write-Host "::error file=bucket/$($f.Name)::Invalid manifest in $($f.Name): $_"
+                  $failed = $true
+              }
+          }
+
+          if ($failed) {
+              Write-Host "::error::Manifest validation failed. See annotations above."
+              exit 1
+          }
