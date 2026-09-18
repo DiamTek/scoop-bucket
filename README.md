@@ -1,24 +1,24 @@
-<h1 align=\ center\>DiamTek Scoop Bucket</h1>
+<h1 align="center">DiamTek Scoop Bucket</h1>
 
-<p align=\center\>
-  Official <a href=\https://scoop.sh\>Scoop</a> bucket for DiamTek software and utilities on Windows.
+<p align="center">
+  Official <a href="https://scoop.sh">Scoop</a> bucket for DiamTek software and utilities on Windows.
 </p>
 
 ---
 
-## 📦 How to Use
+## 📦 Installation & Usage
 
 ### 1. Add this Bucket to Scoop
 
-`powershell
+```powershell
 scoop bucket add diamtek https://github.com/DiamTek/scoop-bucket
-`
+```
 
 ### 2. Install Applications
 
-`powershell
+```powershell
 scoop install jvm
-`
+```
 
 ---
 
@@ -26,7 +26,7 @@ scoop install jvm
 
 | Application | Manifest | Description |
 |---|---|---|
-| **JVM** | [jvm](bucket/jvm.json) | Native Java Version Manager & SDKMAN! alternative for Windows |
+| **JVM** | [`jvm`](bucket/jvm.json) | Native Java Version Manager & SDKMAN! alternative for Windows |
 
 ---
 
@@ -34,28 +34,28 @@ scoop install jvm
 
 To update this bucket and all installed apps:
 
-`powershell
+```powershell
 scoop update
 scoop update *
-`
+```
 
 Or update JVM specifically:
 
-`powershell
+```powershell
 scoop update jvm
-`
+```
 
 ---
 
 ## 🗑️ Removing
 
-`powershell
+```powershell
 # Uninstall JVM
 scoop uninstall jvm
 
 # Remove bucket
 scoop bucket rm diamtek
-`
+```
 
 ---
 
